@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   modules: ['@unocss/nuxt', '@vueuse/nuxt', 'nuxt-monaco-editor', '@nuxtjs/seo'],
   app: {
     head: {
-      title: 'JS Deobfuscator - 在线 JS 反混淆工具',
+      title: 'JS Deobfuscator - Online JS Deobfuscator Tool',
       titleTemplate: '%s',
       htmlAttrs: { lang: 'zh-CN' },
       meta: [
@@ -78,21 +78,21 @@ export default defineNuxtConfig({
   site: {
     url: 'https://js-deobfuscator.vercel.app',
     name: 'JS Deobfuscator',
-    description: '让混淆不再成为逆向分析中的绊脚石。基于 Babel AST 的自动化 JS 反混淆工具，提供在线 Playground、命令行与可编程 API。',
+    description: 'Make obfuscation no longer a stumbling block in reverse analysis. Automated JS deobfuscator based on Babel AST, providing online Playground, CLI and programmable API.',
     defaultLocale: 'zh-CN',
   },
   seo: {
     meta: {
-      description: '让混淆不再成为逆向分析中的绊脚石。基于 Babel AST 的自动化 JS 反混淆工具，提供在线 Playground、命令行与可编程 API。Make obfuscation no longer a stumbling block in reverse analysis.',
+      description: 'Make obfuscation no longer a stumbling block in reverse analysis. Automated JS deobfuscator based on Babel AST, providing online Playground, CLI and programmable API.',
       themeColor: [
         { content: '#18181b', media: '(prefers-color-scheme: dark)' },
         { content: '#fef3c7', media: '(prefers-color-scheme: light)' },
       ],
       ogImage: 'https://img.kuizuo.me/js-deobfuscator.png',
-      ogTitle: 'JS Deobfuscator - 在线 JS 反混淆工具',
+      ogTitle: 'JS Deobfuscator - Online JS Deobfuscator Tool',
       ogSiteName: 'JS Deobfuscator',
       twitterCard: 'summary_large_image',
-      twitterTitle: 'JS Deobfuscator - 在线 JS 反混淆工具',
+      twitterTitle: 'JS Deobfuscator - Online JS Deobfuscator Tool',
     },
   },
   schemaOrg: {

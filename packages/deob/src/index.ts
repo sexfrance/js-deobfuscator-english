@@ -53,7 +53,7 @@ export function parseCode(code: string): ParseResult<t.File> {
   })
 }
 
-// TODO: 错误输出处理 定位代码位置
+// TODO: Error output handling, locate code position
 function _handleError(error: any, rawCode: string) {
   if (error instanceof SyntaxError) {
     const codeFrame = codeFrameColumns(rawCode, {
@@ -78,8 +78,8 @@ function buildDecryptionSummaryLog(map: Map<string, string>) {
 
   const preview = Array.from(map.entries()).slice(0, 5)
   return [
-    '=== 解密结果预览 ===',
-    `- 解密条目: ${map.size} 个`,
+    '=== Decryption Result Preview ===',
+    `- Decrypted items: ${map.size}`,
     ...preview.map(([k, v]) => `  • ${k} -> ${shorten(String(v))}`),
     '====================',
   ].join('\n')
@@ -92,7 +92,7 @@ export async function deob(rawCode: string, options: Options = {}): Promise<Deob
   enableLogger('Deob')
 
   if (!rawCode)
-    throw new Error('请载入js代码')
+    throw new Error('Please load js code')
 
   const ast: ParseResult<t.File> = parse(rawCode, {
     sourceType: 'unambiguous',
@@ -104,7 +104,7 @@ export async function deob(rawCode: string, options: Options = {}): Promise<Deob
   let outputCode = ''
 
   const stages = [
-    // 格式预处理
+    // Format preprocessing
     () => {
       applyTransforms(
         ast,
@@ -112,7 +112,7 @@ export async function deob(rawCode: string, options: Options = {}): Promise<Deob
         { name: 'prepare' },
       )
     },
-    // 定位解密器
+    // Locate decoders
     async () => {
       let stringArray: StringArray | undefined
       let decoders: Decoder[] = []
@@ -137,7 +137,7 @@ export async function deob(rawCode: string, options: Options = {}): Promise<Deob
         decoders = collectDecoders(ast, opts.decoderNames!)
       }
 
-      logger(`${stringArray ? `字符串数组: ${stringArray?.name} (共 ${stringArray?.length} 项) 被引用 ${stringArray?.references.length} 处` : '没找到字符串数组'} | ${decoders.length ? `解密器函数: ${decoders.map(d => d.name)}` : '没找到解密器函数'}`)
+      logger(`${stringArray ? `String Array: ${stringArray?.name} (Total ${stringArray?.length} items) Referenced ${stringArray?.references.length} times` : 'String Array not found'} | ${decoders.length ? `Decoder functions: ${decoders.map(d => d.name)}` : 'Decoder functions not found'}`)
 
       await evalCode(opts.sandbox!, setupCode)
 
@@ -149,10 +149,10 @@ export async function deob(rawCode: string, options: Options = {}): Promise<Deob
         )
       }
 
-      // 对象引用替换
+      // Object reference replacement
       applyTransform(ast, inlineObjectProps)
 
-      // 执行解密器
+      // Execute decoders
       const map = await decodeStrings(opts.sandbox!, decoders as Decoder[])
 
       if (map.size > 0) {
@@ -169,7 +169,7 @@ export async function deob(rawCode: string, options: Options = {}): Promise<Deob
 
       return { changes: (map as any)?.size ?? decoders.length }
     },
-    // 控制流平坦化
+    // Control flow flattening
     () => applyTransforms(
       ast,
       [mergeStrings, deadCode, controlFlowObject, controlFlowSwitch],
@@ -177,20 +177,20 @@ export async function deob(rawCode: string, options: Options = {}): Promise<Deob
     ),
     // unminify
     () => applyTransforms(ast, [transpile, unminify]),
-    // 变量命名优化
+    // Variable name optimization
     () => applyTransform(ast, mangle, getMangleMatcher(opts)),
-    // 移除自卫代码
+    // Remove self-defending code
     () => applyTransforms(
       ast,
       [
         [selfDefending, debugProtection],
       ].flat(),
     ),
-    // 合并对象
+    // Merge objects
     () => applyTransforms(ast, [mergeObjectAssignments, evaluateGlobals]),
 
     opts.isMarkEnable && (() => {
-      logger(`关键字列表: [${opts.keywords.join(', ')}]`)
+      logger(`Keyword list: [${opts.keywords.join(', ')}]`)
       markKeyword(ast, opts.keywords)
       return { changes: opts.keywords.length }
     }),

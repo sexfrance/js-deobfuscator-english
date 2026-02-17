@@ -7,8 +7,8 @@ import { expression } from '@babel/template'
 import { generate } from '../ast-utils'
 
 /**
- * 嵌套函数花指令替换 需要优先执行 通常内嵌解密函数
- * @param {number} 嵌套深度 针对多次嵌套,默认为 2
+ * Nested function junk code replacement. Need to execute first. Usually nested decoder function
+ * @param {number} Nesting depth. For multiple nesting, default is 2
  * @example
  * var _0x49afe4 = function (_0x254ae1, _0x559602, _0x3dfa50, _0x13ee81) {
  *   return _0x4698(_0x13ee81 - -674, _0x3dfa50);
@@ -32,9 +32,9 @@ export default {
 
       const firstStatement = path.get('body').get('body')?.[0] as NodePath<t.ReturnStatement>
 
-      // 在原代码中，函数体就一行 return 语句 并且 参数还是函数表达式
+      // In the original code, the function body is just one return statement and the argument is also a function expression
       if (firstStatement && firstStatement.isReturnStatement()) {
-        // 真实调用函数(解密函数)
+        // Real call function (decoder function)
         const realFn = firstStatement.get('argument')
 
         if (!realFn.isCallExpression()) return
@@ -42,35 +42,35 @@ export default {
         const realFnCallee = realFn.get('callee')
         if (realFnCallee.isIdentifier()) return
 
-        // 包装函数
+        // Wrapper function
         const wrapFn = path
 
         const binding = path.scope.getBinding(fnName)
         if (!binding) return
 
-        // 遍历 _0x49afe4(-57, 1080, 828, 469)
+        // Traverse _0x49afe4(-57, 1080, 828, 469)
         binding.referencePaths.forEach((ref) => {
-          // 通过引用找到调用混淆函数的,需要拿到实际传入的参数
+          // Find the call to the obfuscated function through reference, need to get the actual passed parameters
           if (ref.parentKey === 'callee' && ref.parentPath?.isCallExpression()) {
-            // 调用传入参数 -57, 1080, 828, 469
+            // Call passed parameters -57, 1080, 828, 469
             const callFn_args = ref.parentPath.node.arguments
 
-            // 要替换的模版
+            // Template to replace
             let templateCode = generate(realFn.node)
 
-            // 记录后续模版中要替换的标识符
+            // Record identifiers to be replaced in subsequent templates
             const replaceIdentifiers: Record<string, any> = {}
 
-            // 遍历 (_0x254ae1, _0x559602, _0x3dfa50, _0x13ee81)
+            // Traverse (_0x254ae1, _0x559602, _0x3dfa50, _0x13ee81)
             wrapFn.node.params.forEach((param, i) => {
               if (param.type !== 'Identifier')
                 return
 
-              // 如果模版中不存在标识符则没有用到
+              // If identifier does not exist in template, it is not used
               if (templateCode.includes(param.name)) {
                 templateCode = templateCode.replace(new RegExp(`${param.name}`, 'g'), `%%${param.name}%%`)
 
-                // 拿到传入参数 如 第四个参数 _0x13ee81 对应 469
+                // Get passed parameter, e.g. 4th parameter _0x13ee81 corresponds to 469
                 const arg = callFn_args[i]
                 replaceIdentifiers[param.name] = arg
               }

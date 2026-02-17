@@ -84,7 +84,7 @@ worker.onmessage = ({ data }) => {
     error.value = null
     output.value = data.code
     parseTime.value = data.parseTime
-    pushLog(`解混淆完成，用时 ${data.parseTime} ms | 定位方式: ${options.value.decoderLocationMethod}`)
+    pushLog(`Deobfuscation completed, time: ${data.parseTime} ms | Method: ${options.value.decoderLocationMethod}`)
   }
 }
 
@@ -97,7 +97,7 @@ worker.onerror = (event) => {
 
 async function run() {
   if (!code.value?.trim()) {
-    error.value = '请输入代码'
+    error.value = 'Please input code'
     return
   }
 
@@ -135,8 +135,8 @@ function openOptions() {
           <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs font-medium shadow-sm dark:border-zinc-800/80 dark:bg-zinc-950/50">
             <div class="flex items-center gap-2 text-zinc-700 dark:text-zinc-200">
               <div class="i-ri:terminal-window-line text-lg" />
-              <span class="font-semibold">输出结果</span>
-              <span class="text-[11px] text-zinc-500 dark:text-zinc-400">运行后在此查看解混淆的代码</span>
+              <span class="font-semibold">Output Result</span>
+              <span class="text-[11px] text-zinc-500 dark:text-zinc-400">View deobfuscated code here after running</span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
               <span
@@ -148,20 +148,20 @@ function openOptions() {
               <button
                 :disabled="loading === 'parse'"
                 class="inline-flex items-center gap-2 rounded-md border border-transparent bg-gradient-to-r from-amber-400 to-orange-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md transition hover:enabled:from-amber-500 hover:enabled:to-orange-600 disabled:cursor-not-allowed disabled:opacity-70 disabled:from-amber-300 disabled:to-orange-400"
-                :title="loading === 'parse' ? '处理中...' : 'Deobfuscate'"
+                :title="loading === 'parse' ? 'Processing...' : 'Deobfuscate'"
                 @click="run"
               >
                 <div v-if="loading === 'parse'" class="i-ri:loader-4-line animate-spin" />
                 <div v-else class="i-ri:play-mini-fill" />
-                <span>{{ loading === 'parse' ? '处理中' : '解混淆' }}</span>
+                <span>{{ loading === 'parse' ? 'Processing' : 'Deobfuscate' }}</span>
               </button>
               <button
                 class="inline-flex items-center gap-2 rounded-md border border-amber-200/70 bg-amber-50/80 px-3 py-1.5 text-xs font-semibold text-amber-800 shadow-sm transition hover:border-amber-400 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100"
-                title="打开配置"
+                title="Open Configuration"
                 @click="openOptions"
               >
                 <div class="i-ri:settings-4-line" />
-                <span>配置</span>
+                <span>Config</span>
               </button>
               <button
                 class="inline-flex items-center gap-2 rounded-md border border-zinc-200/80 bg-white/90 px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:border-amber-400 hover:text-amber-700 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-200"
@@ -170,7 +170,7 @@ function openOptions() {
               >
                 <div v-if="!copied" class="i-ri:file-copy-2-line" />
                 <div v-else class="i-ri:check-line text-emerald-500" />
-                <span>{{ copied ? '已复制' : '复制' }}</span>
+                <span>{{ copied ? 'Copied' : 'Copy' }}</span>
               </button>
               <button
                 class="inline-flex items-center gap-2 rounded-md border border-zinc-200/80 bg-white/90 px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm transition hover:border-amber-400 hover:text-amber-700 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-200"
@@ -178,7 +178,7 @@ function openOptions() {
                 @click="download()"
               >
                 <div class="i-ri:download-2-line" />
-                <span>下载</span>
+                <span>Download</span>
               </button>
             </div>
           </div>
@@ -187,7 +187,7 @@ function openOptions() {
               v-if="loading === 'parse'"
               class="flex w-full items-center justify-center text-sm text-zinc-500 dark:text-zinc-400"
             >
-              正在解析混淆代码...
+              Parsing obfuscated code...
             </div>
             <div
               v-else-if="error"
@@ -197,7 +197,7 @@ function openOptions() {
                 <div class="i-ri:error-warning-line mt-0.5 text-lg" />
                 <div class="space-y-2">
                   <div class="text-xs uppercase tracking-wide text-red-500 dark:text-red-200">
-                    解析失败
+                    Parse Failed
                   </div>
                   <pre class="max-h-60 whitespace-pre-wrap break-all font-mono text-xs leading-5" v-text="String(error)" />
                 </div>
@@ -207,7 +207,7 @@ function openOptions() {
               v-else-if="!output"
               class="flex w-full items-center justify-center text-sm text-zinc-500 dark:text-zinc-400"
             >
-              点击“解混淆”以查看结果
+              Click "Deobfuscate" to view result
             </div>
             <MonacoEditor
               v-else

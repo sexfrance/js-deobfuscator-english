@@ -8,7 +8,7 @@ import * as t from '@babel/types'
 import { getPropName } from '../ast-utils'
 
 /**
- * 对象属性替换 需要先执行 saveAllObject 用于保存所有变量
+ * Object property replacement. Need to execute saveAllObject first to save all variables
  * @example
  * var r = {
  *   "PzXHf": "0|2|4|3|1",
@@ -24,7 +24,7 @@ import { getPropName } from '../ast-utils'
  * _0x3028("foo")
  */
 export default {
-  name: '对象属性引用替换',
+  name: 'Object property reference replacement',
   tags: ['safe'],
   run(ast, state, objects) {
     if (!objects) return
@@ -33,12 +33,12 @@ export default {
     const usedObjects: Record<any, any> = {}
 
     /**
-     * 字面量花指令还原
+     * Literal junk code restoration
      * r["PzXHf"] ---> "0|2|4|3|1"
      */
     traverse(ast, {
       MemberExpression(path) {
-        // 父级表达式不能是赋值语句
+        // Parent expression cannot be an assignment statement
         const asignment = path.parentPath
         if (!asignment || asignment?.type === 'AssignmentExpression')
           return
@@ -47,7 +47,7 @@ export default {
         if (object.type === 'Identifier' && (property.type === 'StringLiteral' || property.type === 'Identifier')) {
           const objectName = object.name
 
-          // 找到 objectName 的定义位置
+          // Find the definition position of objectName
           const binding = path.scope.getBinding(objectName)
           if (!binding)
             return
@@ -69,10 +69,10 @@ export default {
                   && keyName === propertyName
                   && t.isLiteral(prop.value)
                 ) {
-                  // 还需要判断 objectName[propertyName] 是否被修改过
+                  // Also need to determine if objectName[propertyName] has been modified
                   const binding = path.scope.getBinding(objectName)
                   if (binding && binding.constant && binding.constantViolations.length === 0) {
-                    // 针对一些特殊代码不进行处理 如 _0x52627b["QqaUY"]++
+                    // Do not process some special code such as _0x52627b["QqaUY"]++
                     if (path.parent.type === 'UpdateExpression')
                       return
 
@@ -92,7 +92,7 @@ export default {
     })
 
     /**
-     * 函数花指令还原
+     * Function junk code restoration
      * r["LeQrV"](_0x3028, "foo");  --->  _0x3028("foo");
      */
     traverse(ast, {
@@ -102,7 +102,7 @@ export default {
           const objectName = callee.object.name
           const propertyName = getPropName(callee.property)
 
-          // 找到 objectName 的定义位置
+          // Find the definition position of objectName
           const binding = path.scope.getBinding(objectName)
           if (!binding)
             return
@@ -114,7 +114,7 @@ export default {
 
             const properties = objectInit.properties
 
-            // 实际传递参数
+            // Actual passed parameters
             const argumentList = path.node.arguments
 
             for (const prop of properties) {
@@ -129,14 +129,14 @@ export default {
                 && prop.value.type === 'FunctionExpression'
                 && keyName === propertyName
               ) {
-                // 拿到定义函数
+                // Get definition function
                 const orgFn = prop.value
 
-                // 在原代码中，函数体就一行 return 语句，取出其中的 argument 属性与调用节点替换
+                // In the original code, the function body is just one return statement, extract the argument property and replace the call node
                 const firstStatement = orgFn.body.body?.[0]
                 if (firstStatement?.type !== 'ReturnStatement') return
 
-                // 返回参数
+                // Return parameter
                 const returnArgument = firstStatement.argument
 
                 let isReplace = false
@@ -180,19 +180,19 @@ export default {
                   //   return _0x1d0a4d();
                   // }
 
-                  // 取出是哪个参数作为函数名来调用 因为可能会传递多个参数，取其中一个或几个
-                  // 确保调用函数名必须是标识符才替换
+                  // Extract which parameter is called as the function name. Because multiple parameters may be passed, take one or several of them
+                  // Ensure that the called function name must be an identifier before replacement
                   if (returnArgument.callee.type !== 'Identifier')
                     return
 
-                  const callFnName = returnArgument.callee.name // 形参的函数名
+                  const callFnName = returnArgument.callee.name // Function name of formal parameter
 
-                  // 找到从传递的多个参数中 定位索引
+                  // Find index from multiple passed parameters
                   const callIndex = orgFn.params.findIndex(
                     a => t.isIdentifier(a) && a.name === callFnName,
                   )
 
-                  // 再从实际参数(实参)中找到真正函数名
+                  // Find the real function name from the actual parameters (actual arguments)
                   const realFnName = argumentList.splice(callIndex, 1)[0]
                   if (t.isExpression(realFnName) || t.isV8IntrinsicIdentifier(realFnName)) {
                     const callExpression = t.callExpression(
@@ -220,7 +220,7 @@ export default {
     const removeSet = new Set()
 
     /**
-     * 移除已使用过的 property(key)
+     * Remove used property(key)
      * var _0x52627b = {
      *  'QqaUY': "attribute",
      *  SDgrw: "123"
@@ -260,9 +260,9 @@ export default {
     }
 
     if (usedMap.size > 0)
-      console.log(`已被替换对象: `, usedMap)
+      console.log(`Replaced objects: `, usedMap)
 
     if (removeSet.size > 0)
-      console.log(`已移除key列表:`, removeSet)
+      console.log(`Removed key list:`, removeSet)
   },
 } satisfies Transform<Objects>

@@ -5,37 +5,37 @@ import { generate, deobLogger as logger } from '../ast-utils'
 import { Decoder } from '../deobfuscate/decoder'
 
 /**
- * 根据解密器调用次数寻找到解密器
+ * Find decoders based on decoder call count
  *
- * ## 定位原理
- * 混淆代码中的解密器函数通常会被大量调用，因为每个加密的字符串都需要通过解密器来解密。
- * 例如：_0x4b57('0x1'), _0x4b57('0x2'), _0x4b57('0x3')...
- * 这种高频调用的特征可以用来识别解密器函数。
+ * ## Location Principle
+ * Decoder functions in obfuscated code are usually called frequently because every encrypted string needs to be decrypted by the decoder.
+ * Example: _0x4b57('0x1'), _0x4b57('0x2'), _0x4b57('0x3')...
+ * This high-frequency calling characteristic can be used to identify decoder functions.
  *
- * ## 匹配条件
- * 1. 必须是顶层的 FunctionDeclaration（直接在 Program 下）
- * 2. 函数的引用次数 >= count（默认100次）
+ * ## Matching Conditions
+ * 1. Must be a top-level FunctionDeclaration (directly under Program)
+ * 2. Function reference count >= count (default 100)
  *
- * ## 匹配示例
+ * ## Matching Example
  * ```javascript
- * // 这种顶层函数如果被调用超过100次，会被识别为解密器
+ * // If this top-level function is called more than 100 times, it will be identified as a decoder
  * function _0x4b57(x) {
  *   return stringArray[x];
  * }
  *
- * // 大量调用
- * console.log(_0x4b57('0x1'));  // 引用1
- * console.log(_0x4b57('0x2'));  // 引用2
- * // ... 更多调用
+ * // Massive calls
+ * console.log(_0x4b57('0x1'));  // Reference 1
+ * console.log(_0x4b57('0x2'));  // Reference 2
+ * // ... more calls
  * ```
  *
- * ## 返回值
- * - setupCode: 从程序开头到最后一个解密器函数位置的所有代码（包含字符串数组、乱序函数、解密器等）
- * - decoders: 找到的所有解密器
+ * ## Return Value
+ * - setupCode: All code from the beginning of the program to the position of the last decoder function (including string array, rotator function, decoder, etc.)
+ * - decoders: All found decoders
  *
- * @param ast AST 语法树
- * @param count 解密函数最小调用次数阈值，默认100
- * @returns 包含 setupCode 和 decoders 的对象
+ * @param ast AST syntax tree
+ * @param count Minimum call count threshold for decoder function, default 100
+ * @returns Object containing setupCode and decoders
  */
 export function findDecoderByCallCount(ast: t.File, count = 100) {
   let index = 0
@@ -44,23 +44,23 @@ export function findDecoderByCallCount(ast: t.File, count = 100) {
 
   traverse(ast, {
     /**
-     * 遍历所有函数声明，查找高频调用的函数
+     * Traverse all function declarations to find frequently called functions
      *
-     * 只检查顶层函数声明，因为解密器通常定义在全局作用域
-     * 通过 binding.referencePaths.length 获取函数被引用的次数
+     * Only check top-level function declarations because decoders are usually defined in the global scope
+     * Get the number of times the function is referenced via binding.referencePaths.length
      */
     FunctionDeclaration(path) {
-      // 只处理顶层函数（直接在 Program 下的函数声明）
+      // Only process top-level functions (function declarations directly under Program)
       if (path.parentPath.isProgram()) {
         const fnName = path.node.id!.name
 
-        // 获取函数名的绑定信息，包含所有引用路径
+        // Get binding information of the function name, including all reference paths
         const binding = path.scope.getBinding(fnName)
 
         if (!binding) return
 
         if (binding.referencePaths.length >= count) {
-          logger(`根据调用次数命中解密器: ${fnName} (调用 ${binding.referencePaths.length} 次)`)
+          logger(`Found decoder by call count: ${fnName} (called ${binding.referencePaths.length} times)`)
           decoders.push(new Decoder(fnName, fnName, path))
 
           const body = (path.parentPath!.scope.block as t.Program).body
@@ -86,9 +86,9 @@ export function findDecoderByCallCount(ast: t.File, count = 100) {
   const setupCode = generate(newAst, generateOptions)
 
   if (!decoders.length)
-    logger(`未找到调用次数 >= ${count} 的解密器`)
+    logger(`No decoder found with call count >= ${count}`)
   else
-    logger(`解密器列表: ${decoders.map(d => d.name).join(', ')}`)
+    logger(`Decoder list: ${decoders.map(d => d.name).join(', ')}`)
 
   return {
     setupCode,

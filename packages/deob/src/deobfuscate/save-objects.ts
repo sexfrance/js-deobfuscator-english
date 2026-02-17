@@ -6,8 +6,8 @@ import { getPropName } from '../ast-utils'
 export type Objects = Record<`${string}_${string}`, t.ObjectExpression>
 
 /**
- * 保存代码中所有对象用于后续替换
- * @deprecated 该函数已弃用，请使用其他方式处理对象合并与替换
+ * Save all objects in the code for subsequent replacement
+ * @deprecated This function is deprecated, please use other ways to handle object merger and replacement
  * @example
  * var r = {
  *   "PzXHf": "0|2|4|3|1",
@@ -25,7 +25,7 @@ export type Objects = Record<`${string}_${string}`, t.ObjectExpression>
  *   "wPpOS": "webgl"
  * }
  *
- * //  全局变量状态会保存 r 对象
+ * // Global variable state will save r object
  * globalState.objects = {
  *   r = { ... }
  * }
@@ -47,7 +47,7 @@ export function saveObjects(ast: t.Node) {
             if (declaration.init?.type === 'ObjectExpression') {
               objects[`${declaration.start}_${objectName}`] = declaration.init
 
-              // 在同作用域下将变量重命名 var u = e; ---> var e = e; 同时一并移除
+              // Rename variable in the same scope var u = e; ---> var e = e; and remove it at the same time
               const binding = path.scope.getBinding(objectName)
               if (!(binding && binding.path.isVariableDeclarator() && binding.path.get('init')?.isObjectExpression())) return
               if (!binding.constant && binding.constantViolations.length === 0) return
@@ -65,7 +65,7 @@ export function saveObjects(ast: t.Node) {
   })
 
   /**
-   * 合并对象  如果有相同 key 则覆盖
+   * Merge objects. If there is the same key, overwrite it
    * var a = {}
    * a["b"] = 123
    * ⬇️
@@ -93,15 +93,15 @@ export function saveObjects(ast: t.Node) {
 
         const objectName = (left.object as t.Identifier).name
 
-        // 在同作用域下将变量重命名 var u = e; ---> var e = e; 同时一并移除
+        // Rename variable in the same scope var u = e; ---> var e = e; and remove it at the same time
         const binding = path.scope.getBinding(objectName)
 
-        // 判断 原 object 是否为 var e = {}
+        // Determine if the original object is var e = {}
         if (!(binding && binding.path.node.type === 'VariableDeclarator' && binding.path.node.init?.type === 'ObjectExpression')) return
         if (!binding.constant && binding.constantViolations.length === 0) return
 
-        // 同时判断对象初始化的成员长度(避免不必要的替换),一般为空 {}
-        // !!! 但是 后续填充的时候会更改原对象长度,这里可能需要做个缓存
+        // Also determine the member length of object initialization (avoid unnecessary replacement), usually empty {}
+        // !!! But the length of the original object will be changed when filling later, a cache may be needed here
         // if (binding.path.node.init.properties.length !== 0)
         //   return
 
@@ -135,12 +135,12 @@ export function saveObjects(ast: t.Node) {
           }
         }
         catch (_error: any) {
-          throw new Error(`生成表达式失败${_error.message}`)
+          throw new Error(`Failed to generate expression ${_error.message}`)
         }
 
         if (isReplace) {
           if (path.parentPath.type === 'SequenceExpression' || path.parentPath.type === 'ExpressionStatement')
-            path.remove() // 移除自身赋值语句
+            path.remove() // Remove self assignment statement
         }
 
         path.skip()
@@ -156,7 +156,7 @@ export function saveObjects(ast: t.Node) {
         if (init && init.type === 'Identifier' && id.type === 'Identifier') {
           if (init.name === objectName) {
             p.scope.rename(id.name, objectName)
-            // !!! 移除后 再次解析会导致 start 定位变更, 致使后续对象替换失效, 因此执行替换前不要执行 reParse
+            // !!! Re-parsing after removal will cause the start position to change, causing subsequent object replacement to fail, so do not execute reParse before executing replacement
             p.parentPath.remove()
           }
         }

@@ -140,7 +140,7 @@ function processReferences(
         // }
         const funcDeclaration = parent?.parentPath.findParent(p => p.isFunctionDeclaration())
         if (funcDeclaration?.isFunctionDeclaration()) {
-          logger(`发现解密器 (变量派生): ${funcDeclaration.node.id!.name}`)
+          logger(`Found decoder (variable derived): ${funcDeclaration.node.id!.name}`)
           decoders.push(new Decoder(funcDeclaration.node.id!.name, funcDeclaration.node.id!.name, funcDeclaration))
         }
       }
@@ -149,16 +149,16 @@ function processReferences(
 }
 
 export function findDecoderByArray(ast: t.Node) {
-  // 大数组 有可能是以函数形式包裹的
+  // Large array might be wrapped in a function
   let stringArray: {
     path: NodePath<t.Node>
     references: NodePath[]
     name: string
     length: number
   } | undefined
-  // 乱序函数
+  // Rotator function
   const rotators: ArrayRotator[] = []
-  // 解密器
+  // Decoders
   const decoders: Decoder[] = []
 
   // Create matcher for wrapped array function pattern
@@ -181,7 +181,7 @@ export function findDecoderByArray(ast: t.Node) {
 
         if (!binding) return
 
-        logger(`发现包装的字符串数组函数: ${name}`)
+        logger(`Found wrapped string array function: ${name}`)
 
         stringArray = {
           path,
@@ -190,7 +190,7 @@ export function findDecoderByArray(ast: t.Node) {
           length,
         }
 
-        // 通过引用 找到 数组乱序代码 与 解密函数代码
+        // Find array rotator code and decoder function code through references
         processReferences(binding, name, rotators, decoders)
 
         path.skip()
@@ -215,7 +215,7 @@ export function findDecoderByArray(ast: t.Node) {
         stringArrayName = (stringArrayDeclaration.node.id as t.Identifier).name
         stringArrayPath = stringArrayDeclaration.parentPath
 
-        // 可能会被在包裹一层
+        // Might be wrapped in another layer
         const parent = stringArrayPath.findParent(p => p.isFunctionDeclaration())
         if (parent && parent.isFunctionDeclaration()) {
           stringArrayName = parent.node.id!.name
@@ -252,7 +252,7 @@ export function findDecoderByArray(ast: t.Node) {
         length: path.node.elements.length,
       }
 
-      // 通过引用 找到 数组乱序代码 与 解密函数代码
+      // Find array rotator code and decoder function code through references
       processReferences(binding, stringArrayName, rotators, decoders)
 
       path.skip()

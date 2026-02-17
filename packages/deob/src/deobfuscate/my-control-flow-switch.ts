@@ -4,7 +4,7 @@ import * as t from '@babel/types'
 import { getPropName } from '../ast-utils'
 
 /**
- * 控制流扁平化
+ * Control flow flattening
  * @example
  * function a() {
  *   var _0x263cfa = "1|3|2|0"["split"]("|"),
@@ -48,18 +48,18 @@ export default {
   visitor() {
     return {
       SwitchStatement(path) {
-        // 判断父节点是否为循环节点
+        // Determine if parent node is a loop node
         const forOrWhileStatementPath = path.findParent(p => p.isForStatement() || p.isWhileStatement())
 
         if (!forOrWhileStatementPath) return
 
-        // 拿到函数的块语句
+        // Get block statement of function
         const fnBlockStatementPath = forOrWhileStatementPath.findParent(p => p.isBlockStatement()) as unknown as NodePath<t.BlockStatement>
         if (!fnBlockStatementPath) return
 
         let shufferArr: string[] = []
 
-        // 从整个函数的 BlockStatement 中遍历寻找 "1|3|2|0"["split"]
+        // Traverse whole function BlockStatement to find "1|3|2|0"["split"]
         fnBlockStatementPath.traverse({
           MemberExpression(path) {
             const { object, property } = path.node
@@ -73,7 +73,7 @@ export default {
                 const shufferString = object.value // "1|3|2|0"
                 shufferArr = shufferString.split('|')
 
-                // 顺带移除 var _0x263cfa = "1|3|2|0"["split"]("|"),
+                // Also remove var _0x263cfa = "1|3|2|0"["split"]("|"),
                 const VariableDeclarator = path.findParent(p => p.isVariableDeclarator())
 
                 if (VariableDeclarator)
@@ -94,14 +94,14 @@ export default {
 
         const sequences = shufferArr
           .map(s => myArr[Number(s)])
-          .filter(s => s?.type !== 'ContinueStatement') // 如果 case 语句 只有 continue 则跳过
+          .filter(s => s?.type !== 'ContinueStatement') // If case statement only has continue, skip
 
         fnBlockStatementPath.node.body.push(...sequences)
 
         const parentPath = path.parentPath?.parentPath
         if (!parentPath) return
 
-        // 将整个循环体都移除
+        // Remove the entire loop body
         if (['WhileStatement', 'ForStatement'].includes(parentPath.type))
           parentPath.remove()
       },

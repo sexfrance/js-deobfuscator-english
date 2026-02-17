@@ -5,16 +5,16 @@ import { deobLogger as logger } from '../ast-utils'
 import { evalCode } from '../deobfuscate/vm'
 
 /**
- * 执行解密器 (使用 eval 执行)
- * @param sandbox 执行解密代码的沙箱环境
- * @param decoders 解密器列表
+ * Execute decoder (execute using eval)
+ * @param sandbox Sandbox environment for executing decryption code
+ * @param decoders List of decoders
  * @example
  * _0x4698(_0x13ee81, _0x3dfa50)
  * ⬇️
- * 原始字符串
+ * Original string
  */
 export async function decodeStrings(sandbox: Sandbox, decoders: Decoder[]) {
-  const map = new Map<string, string>() // 记录解密结果
+  const map = new Map<string, string>() // Record decryption results
   let failures = 0
 
   for (const decoder of decoders) {
@@ -23,7 +23,7 @@ export async function decodeStrings(sandbox: Sandbox, decoders: Decoder[]) {
       if (ref?.parentKey === 'callee' && ref.parentPath?.isCallExpression()) {
         const callExpression = ref.parentPath
         try {
-          // 如果调用解密函数中有变量参数则不替换
+          // If there are variable arguments in the decoder function call, do not replace
           const hasIdentifier = callExpression.node.arguments.some(a => t.isIdentifier(a))
           if (hasIdentifier) continue
 
@@ -36,7 +36,7 @@ export async function decodeStrings(sandbox: Sandbox, decoders: Decoder[]) {
         }
         catch (error) {
           failures++
-          // 解密失败 则添加注释
+          // Add comment if decryption fails
           callExpression.addComment('leading', `decode_error: ${(error as any).message}`, true)
         }
       }
@@ -44,7 +44,7 @@ export async function decodeStrings(sandbox: Sandbox, decoders: Decoder[]) {
   }
 
   if (failures)
-    logger(`\x1B[31m解密失败 ${failures} 处，已在代码中标记 decode_error\x1B[0m`)
+    logger(`\x1B[31mDecryption failed at ${failures} places, marked decode_error in code\x1B[0m`)
 
   return map
 }

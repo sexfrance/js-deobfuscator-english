@@ -3,26 +3,26 @@ import { createBrowserSandbox, createNodeSandbox } from './deobfuscate/vm'
 import { isBrowser } from './utils/platform'
 
 export interface Options {
-  /** 解密器定位方式 */
+  /** Decoder location method */
   decoderLocationMethod?: 'callCount' | 'stringArray' | 'evalCode'
-  /** 解密器调用次数 */
+  /** Decoder call count */
   decoderCallCount?: number
-  /** 执行代码函数 */
+  /** Execute code function */
   setupCode?: string
-  /** 指明解密函数 */
+  /** Specify decoder function */
   decoderNames?: string | string[]
 
-  /** 是否标记关键信息 */
+  /** Whether to mark key information */
   isMarkEnable?: boolean
-  /** 关键标识符 */
+  /** Key identifiers */
   keywords?: string[]
-  /** 变量名优化模式 */
+  /** Variable name optimization mode */
   mangleMode?: 'off' | 'all' | 'hex' | 'short' | 'custom'
-  /** 自定义变量名优化正则 */
+  /** Custom variable name optimization regex */
   manglePattern?: string
-  /** 自定义变量名优化正则标志位 */
+  /** Custom variable name optimization regex flags */
   mangleFlags?: string
-  /** 沙盒 */
+  /** Sandbox */
   sandbox?: Sandbox
 }
 

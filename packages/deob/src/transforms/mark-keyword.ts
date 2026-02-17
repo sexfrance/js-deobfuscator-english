@@ -7,7 +7,7 @@ export interface Options {
 }
 
 /**
- * 给关键函数、标识符 设置注释
+ * Add comments to key functions and identifiers
  * @example
  * debugger;
  * ⬇️
@@ -21,7 +21,7 @@ export function markKeyword(ast: t.Node, keywords = ['debugger'], label = ' TOLO
   traverse(ast, {
     DebuggerStatement: {
       exit(path) {
-        // 如果已注释,则跳过
+        // Skip if already commented
         const hasComment = path.node.leadingComments?.find(
           c => (c.value = label),
         )
